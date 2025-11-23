@@ -1,97 +1,76 @@
 """
-IAM Cybersecurity Automation Project
-Technologies:
-- SailPoint IdentityIQ/IdentityNow (IGA)
-- Microsoft Entra ID (IDaaS)
-- SCIM Protocol for SaaS connectors (Salesforce, Jira)
+IAM Cybersecurity Automation Demo
+This version avoids real API calls and uses mock data (dict + json).
+Safe to run locally without network errors.
 """
 
-import requests
 import json
 from typing import Dict
 
 # -------------------------------
-# CONFIGURATION
+# MOCK FUNCTIONS
 # -------------------------------
-SAILPOINT_BASE_URL = "https://your-sailpoint-instance/api"
-SAILPOINT_API_KEY = "your_sailpoint_api_key"
 
-ENTRA_BASE_URL = "https://graph.microsoft.com/v1.0"
-ENTRA_TOKEN = "your_ms_graph_token"
-
-SCIM_SALESFORCE_URL = "https://your-salesforce-instance/scim/v2"
-SCIM_JIRA_URL = "https://your-jira-instance/scim/v2"
-SCIM_TOKEN = "your_scim_token"
-
-# -------------------------------
-# IGA FUNCTIONS (SailPoint)
-# -------------------------------
 def sailpoint_get_identities() -> Dict:
-    """Fetch identities from SailPoint IGA."""
-    headers = {"Authorization": f"Bearer {SAILPOINT_API_KEY}"}
-    response = requests.get(f"{SAILPOINT_BASE_URL}/identities", headers=headers)
-    return response.json()
+    """Simulate fetching identities from SailPoint IGA."""
+    mock_identities = [
+        {"id": "101", "name": "Priya", "role": "Admin"},
+        {"id": "102", "name": "Ravi", "role": "User"},
+    ]
+    return {"identities": mock_identities}
 
 def sailpoint_provision_user(user_data: Dict) -> Dict:
-    """Provision a new user in SailPoint."""
-    headers = {"Authorization": f"Bearer {SAILPOINT_API_KEY}", "Content-Type": "application/json"}
-    response = requests.post(f"{SAILPOINT_BASE_URL}/identities", headers=headers, data=json.dumps(user_data))
-    return response.json()
+    """Simulate provisioning a new user in SailPoint."""
+    return {"status": "success", "provisioned_user": user_data}
 
-# -------------------------------
-# IDaaS FUNCTIONS (Microsoft Entra ID)
-# -------------------------------
 def entra_get_users() -> Dict:
-    """Fetch users from Microsoft Entra ID (Azure AD)."""
-    headers = {"Authorization": f"Bearer {ENTRA_TOKEN}"}
-    response = requests.get(f"{ENTRA_BASE_URL}/users", headers=headers)
-    return response.json()
+    """Simulate fetching users from Microsoft Entra ID."""
+    mock_users = [
+        {"id": "201", "name": "TechCorpUser1", "mfa_enabled": True},
+        {"id": "202", "name": "TechCorpUser2", "mfa_enabled": False},
+    ]
+    return {"users": mock_users}
 
 def entra_enable_mfa(user_id: str) -> Dict:
-    """Enable MFA for a given user in Entra ID."""
-    headers = {"Authorization": f"Bearer {ENTRA_TOKEN}", "Content-Type": "application/json"}
-    mfa_policy = {
-        "strongAuthenticationMethods": [
-            {"method": "phone", "isDefault": True}
-        ]
-    }
-    response = requests.patch(f"{ENTRA_BASE_URL}/users/{user_id}", headers=headers, data=json.dumps(mfa_policy))
-    return response.json()
+    """Simulate enabling MFA for a given user."""
+    return {"status": "success", "user_id": user_id, "mfa_enabled": True}
 
-# -------------------------------
-# SCIM FUNCTIONS (Salesforce / Jira)
-# -------------------------------
-def scim_provision_user(scim_url: str, user_data: Dict) -> Dict:
-    """Provision user to downstream SaaS via SCIM."""
-    headers = {"Authorization": f"Bearer {SCIM_TOKEN}", "Content-Type": "application/json"}
-    response = requests.post(f"{scim_url}/Users", headers=headers, data=json.dumps(user_data))
-    return response.json()
+def scim_provision_user(system: str, user_data: Dict) -> Dict:
+    """Simulate provisioning user to downstream SaaS via SCIM."""
+    return {"status": "success", "system": system, "user": user_data}
 
-def scim_deprovision_user(scim_url: str, user_id: str) -> Dict:
-    """De-provision user from downstream SaaS via SCIM."""
-    headers = {"Authorization": f"Bearer {SCIM_TOKEN}"}
-    response = requests.delete(f"{scim_url}/Users/{user_id}", headers=headers)
-    return {"status": response.status_code}
+def scim_deprovision_user(system: str, user_id: str) -> Dict:
+    """Simulate de-provisioning user from downstream SaaS via SCIM."""
+    return {"status": "success", "system": system, "user_id": user_id}
 
 # -------------------------------
 # MAIN WORKFLOW
 # -------------------------------
+
 if __name__ == "__main__":
-    print("🔐 IAM Cybersecurity Automation Starting...")
+    print("🔐 IAM Cybersecurity Automation Demo Starting...\n")
 
     # Example: Fetch identities from SailPoint
     identities = sailpoint_get_identities()
-    print(f"Fetched {len(identities)} identities from SailPoint")
+    print("SailPoint identities:", json.dumps(identities, indent=2))
+
+    # Example: Provision new user in SailPoint
+    new_user = {"id": "103", "name": "Jane Doe", "role": "Manager"}
+    provision_result = sailpoint_provision_user(new_user)
+    print("\nProvision result:", json.dumps(provision_result, indent=2))
 
     # Example: Fetch users from Entra ID
     users = entra_get_users()
-    print(f"Fetched {len(users['value'])} users from Entra ID")
+    print("\nEntra ID users:", json.dumps(users, indent=2))
+
+    # Example: Enable MFA for a user
+    mfa_result = entra_enable_mfa("202")
+    print("\nMFA enable result:", json.dumps(mfa_result, indent=2))
 
     # Example: Provision user to Salesforce via SCIM
-    new_user = {
-        "userName": "jane.doe@example.com",
-        "name": {"givenName": "Jane", "familyName": "Doe"},
-        "emails": [{"value": "jane.doe@example.com", "primary": True}]
-    }
-    scim_response = scim_provision_user(SCIM_SALESFORCE_URL, new_user)
-    print(f"Provisioned user to Salesforce: {scim_response}")
+    scim_result = scim_provision_user("Salesforce", new_user)
+    print("\nSCIM provision result:", json.dumps(scim_result, indent=2))
+
+    # Example: De-provision user from Jira via SCIM
+    scim_deprov_result = scim_deprovision_user("Jira", "103")
+    print("\nSCIM de-provision result:", json.dumps(scim_deprov_result, indent=2))
